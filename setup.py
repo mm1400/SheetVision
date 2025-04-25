@@ -11,6 +11,10 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/mm1400/SheetVision",
     packages=find_packages(),
+    include_package_data=True,
+    package_data= {
+      "sheetvision": ["resources/*.png"]
+    },
     install_requires=[
         'numpy',
         'opencv-python',
