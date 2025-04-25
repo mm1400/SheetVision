@@ -1,11 +1,12 @@
 import sys
 import cv2
 import numpy as np
-from best_fit import fit
-from rectangle import Rectangle
-from note import Note
+from .best_fit import fit
+from .rectangle import Rectangle
+from .note import Note
 from concurrent.futures import ThreadPoolExecutor
 from midiutil import MIDIFile
+from importlib import resources
 
 def locate_images(img, templates, start, stop, threshold):
     locations, scale = fit(img, templates, start, stop, threshold)
@@ -37,15 +38,25 @@ def merge_recs(recs, threshold):
     return filtered
 
 def main(img_path):
-    def load_images(paths): return [cv2.imread(p, 0) for p in paths]
-    staff_imgs = load_images(["resources/template/staff2.png", "resources/template/staff.png"])
-    quarter_imgs = load_images(["resources/template/quarter.png", "resources/template/solid-note.png"])
-    sharp_imgs = load_images(["resources/template/sharp.png"])
-    flat_imgs = load_images(["resources/template/flat-line.png", "resources/template/flat-space.png"])
-    half_imgs = load_images(["resources/template/half-space.png", "resources/template/half-note-line.png",
-                             "resources/template/half-line.png", "resources/template/half-note-space.png"])
-    whole_imgs = load_images(["resources/template/whole-space.png", "resources/template/whole-note-line.png",
-                              "resources/template/whole-line.png", "resources/template/whole-note-space.png"])
+    def load_images(paths):
+        images = []
+        for path in paths:
+            img_file_path = resources.files("sheetvision.resources").joinpath(path)
+            
+            with img_file_path.open("rb") as img_file:
+                img_data = np.frombuffer(img_file.read(), np.uint8)
+                images.append(cv2.imdecode(img_data, cv2.IMREAD_GRAYSCALE))
+        return images
+    
+    # Load images for each template
+    staff_imgs = load_images(["template/staff2.png", "template/staff.png"])
+    quarter_imgs = load_images(["template/quarter.png", "template/solid-note.png"])
+    sharp_imgs = load_images(["template/sharp.png"])
+    flat_imgs = load_images(["template/flat-line.png", "template/flat-space.png"])
+    half_imgs = load_images(["template/half-space.png", "template/half-note-line.png",
+                             "template/half-line.png", "template/half-note-space.png"])
+    whole_imgs = load_images(["template/whole-space.png", "template/whole-note-line.png",
+                              "template/whole-line.png", "template/whole-note-space.png"])
 
     thresholds = {
         'staff': (50, 150, 0.77),
